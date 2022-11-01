@@ -1,0 +1,117 @@
+{
+  "schema_version": 4,
+  "standard_lib_version": 6,
+  "name": "SentinelOne Demo",
+  "description": null,
+  "guid": "532f6f28802e026db9541585774c9db5",
+  "slug": "sentinelone_demo",
+  "exported_at": "2022-11-01T11:05:49Z",
+  "agents": [
+    {
+      "type": "Agents::EventTransformationAgent",
+      "name": "Every 5 Minutes",
+      "disabled": false,
+      "guid": "b5c9f3993dd4ac594de9f696a3fb1ee9",
+      "options": {
+        "mode": "message_only",
+        "loop": false,
+        "payload": [
+          "=DATE(\"now\", \"%s\") |> MINUS(NUMBER(%), 300) |> DATE(TEXT(%), \"%Y-%m-%d %H:%M:%S\")"
+        ]
+      },
+      "reporting": {
+        "time_saved_value": 0,
+        "time_saved_unit": "minutes"
+      },
+      "monitoring": {
+        "monitor_all_events": false,
+        "monitor_failures": false,
+        "monitor_no_events_emitted": null
+      },
+      "width": null,
+      "schedule": [
+        {
+          "cron": "*/1 * * * *",
+          "timezone": "Europe/London"
+        }
+      ]
+    },
+    {
+      "type": "Agents::HTTPRequestAgent",
+      "name": "Query SentinelOne Active K8s Threats",
+      "disabled": false,
+      "guid": "4ca59145d32dd8ea1af3f29c43c05612",
+      "options": {
+        "url": "<<RESOURCE.sentinelone_url>>/web/api/v2.1/threats",
+        "content_type": "application_json",
+        "method": "get",
+        "payload": {
+          "agentMachineTypes": "kubernetes node",
+          "createdAt__gt": "<<UNIX_TIMESTAMP() - 300 |> DATE(%, '%Y-%m-%d %H:%M:%S')>>"
+        },
+        "headers": {
+          "Authorization": "APIToken <<CREDENTIAL.sentinelone>>"
+        }
+      },
+      "reporting": {
+        "time_saved_value": 0,
+        "time_saved_unit": "minutes"
+      },
+      "monitoring": {
+        "monitor_all_events": false,
+        "monitor_failures": false,
+        "monitor_no_events_emitted": null
+      },
+      "width": null,
+      "schedule": null
+    },
+    {
+      "type": "Agents::HTTPRequestAgent",
+      "name": "Investigate Detected Threats with Cado Response",
+      "disabled": false,
+      "guid": "6acc95fbb9b757d3f4c50967083c41f9",
+      "options": {
+        "url": "<<RESOURCE.cadoresponse_url>>/api/v2/investigation",
+        "content_type": "application_json",
+        "method": "post",
+        "payload": "<<query_sentinelone_active_k8s_threats.body.data>>",
+        "headers": {
+          "Authorization": "Bearer <<CREDENTIAL.cadoresponse>>"
+        }
+      },
+      "reporting": {
+        "time_saved_value": 0,
+        "time_saved_unit": "minutes"
+      },
+      "monitoring": {
+        "monitor_all_events": false,
+        "monitor_failures": false,
+        "monitor_no_events_emitted": null
+      },
+      "width": null,
+      "schedule": null
+    }
+  ],
+  "diagram_notes": [],
+  "links": [
+    {
+      "source": 0,
+      "receiver": 1
+    },
+    {
+      "source": 1,
+      "receiver": 2
+    }
+  ],
+  "diagram_layout": "{\"b5c9f3993dd4ac594de9f696a3fb1ee9\":[-1050,-285],\"4ca59145d32dd8ea1af3f29c43c05612\":[-1050,-210],\"6acc95fbb9b757d3f4c50967083c41f9\":[-1050,-120]}",
+  "send_to_story_enabled": false,
+  "entry_agent_guid": null,
+  "exit_agent_guids": [],
+  "exit_agent_guid": null,
+  "keep_events_for": 3600,
+  "reporting_status": true,
+  "send_to_story_access": null,
+  "send_to_stories": [],
+  "form": null,
+  "forms": []
+}
